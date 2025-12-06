@@ -1,108 +1,60 @@
-let URL = "https://bookmanagementwebapp-default-rtdb.asia-southeast1.firebasedatabase.app/bookmanagementwebapp"
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    deleteDoc,
+    updateDoc,
+    doc,
+    onSnapshot,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// -------------------------
-// Replace with your project's firebaseConfig from Firebase Console
-// -------------------------
+let books = JSON.parse(localStorage.getItem("books"))
+
+// ================================
+// 1. Firebase Config & Init
+// ================================
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MSG_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase & Firestore
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const booksColRef = collection(db, "books");
 
-// DOM
-const bookGrid = document.getElementById('bookGrid');
-const emptyState = document.getElementById('emptyState');
-const addForm = document.getElementById('addForm');
-const seedBtn = document.getElementById('seedBtn');
-const refreshBtn = document.getElementById('refreshBtn');
-const status = document.getElementById('status');
+// ================================
+// 2. DOM Elements
+// ================================
+const addBookForm = document.getElementById("addBookForm");
+const booksContainer = document.getElementById("booksContainer");
 
 // Modal elements
-const modal = document.getElementById('modal');
-const mdTitle = document.getElementById('mdTitle');
-const mdAuthor = document.getElementById('mdAuthor');
-const mdPrice = document.getElementById('mdPrice');
-const mdImg = document.getElementById('mdImg');
-const closeModal = document.getElementById('closeModal');
+const modalOverlay = document.getElementById("modalOverlay");
+const modalContent = document.getElementById("modalContent");
+const closeModalBtn = document.getElementById("closeModalBtn");
 
-closeModal.addEventListener('click', ()=> modal.classList.remove('open'));
-modal.addEventListener('click', (e)=> { if(e.target===modal) modal.classList.remove('open') });
+// ================================
+// 3. Realtime Listener (READ)
+// ================================
+// Realtime sync: whenever anything changes in 'books' collection,
+// this onSnapshot callback runs and re-renders the UI.
+onSnapshot(booksColRef, (snapshot) => {
+    const books = [];
+    snapshot.forEach((docSnap) => {
+        books.push({ id: docSnap.id, ...docSnap.data() });
+    });
 
-// Simple helper to escape text for HTML insertion
-function escapeHtml(str){
-  return String(str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
-}
+    renderBooks(books);
+});
 
-// Render single card from a Firestore document snapshot
-function renderCard(doc){
-  const data = doc.data();
-  const id = doc.id;
-
-  const card = document.createElement('div');
-  card.className = 'card';
-
-  card.innerHTML = `
-    <div class="cover"><img src="${escapeHtml(data.coverImageURL || '')}" alt="cover"></div>
-    <div class="title">${escapeHtml(data.title || 'Untitled')}</div>
-    <div class="meta">Author: ${escapeHtml(data.author || 'Unknown')}</div>
-    <div class="meta">Price: ₹${escapeHtml(String(data.price || '0'))}</div>
-    <div class="actions">
-      <button class="update">Update Author</button>
-      <button class="delete">Delete</button>
-      <button class="view">View Details</button>
-    </div>
-  `;
-
-  card.querySelector('.delete').addEventListener('click', ()=> deleteBook(id));
-  card.querySelector('.update').addEventListener('click', ()=> updateAuthorPrompt(id, data.author));
-  card.querySelector('.view').addEventListener('click', ()=> openModal(data));
-
-  bookGrid.appendChild(card);
-}
-
-// Open details modal
-function openModal(data){
-  mdTitle.textContent = data.title || '';
-  mdAuthor.textContent = 'Author: ' + (data.author || '');
-  mdPrice.textContent = 'Price: ₹' + (data.price || '');
-  mdImg.src = data.coverImageURL || '';
-  modal.classList.add('open');
-}
-
-// CRUD helpers
-async function addBook(book){
-  await db.collection('books').add(book);
-}
-
-async function deleteBook(id){
-  if(!confirm('Delete this book?')) return;
-  try {
-    await db.collection('books').doc(id).delete();
-  } catch (err) {
-    console.error('Delete error', err);
-    alert('Delete failed');
-  }
-}
-
-async function updateAuthorPrompt(id, currentAuthor){
-  const name = prompt('Enter new author name:', currentAuthor || '');
-  if(name == null) return;
-  try {
-    await db.collection('books').doc(id).update({ author: name });
-  } catch (err) {
-    console.error('Update error', err);
-    alert('Update failed');
-  }
-}
-
-// Sample books (used by seed)
 const sampleBooks = [
   { title: "The Alchemist", author: "Paulo Coelho", price: 399, coverImageURL: "https://covers.openlibrary.org/b/id/10568466-L.jpg" },
   { title: "Atomic Habits", author: "James Clear", price: 499, coverImageURL: "https://covers.openlibrary.org/b/id/11153250-L.jpg" },
@@ -112,83 +64,203 @@ const sampleBooks = [
   { title: "Deep Work", author: "Cal Newport", price: 420, coverImageURL: "https://covers.openlibrary.org/b/id/8369256-L.jpg" }
 ];
 
-// Robust seed handler
-seedBtn.addEventListener('click', async () => {
-  console.log('[seed] clicked');
-  seedBtn.disabled = true; seedBtn.textContent = 'Seeding...';
-
-  try {
-    // Sanity check: Firestore reachable
-    try { await db.collection('books').limit(1).get(); } catch(e){ throw new Error('Firestore unreachable. Check firebaseConfig & rules. ' + e.message); }
-
-    // If there is already data, skip
-    const snap = await db.collection('books').limit(1).get();
-    if(!snap.empty){ alert('Collection not empty — seed skipped.'); return; }
-
-    // Add all books
-    const promises = sampleBooks.map(b => db.collection('books').add(b));
-    const refs = await Promise.all(promises);
-    console.log('[seed] added ids:', refs.map(r => r.id));
-    alert('Seed complete — added ' + refs.length + ' books.');
-  } catch (err) {
-    console.error('[seed] error', err);
-    alert('Seeding failed. See console.');
-  } finally {
-    seedBtn.disabled = false; seedBtn.textContent = 'Seed Sample Books (if empty)';
-  }
-});
-
-// Add form submit
-addForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const book = {
-    title: document.getElementById('title').value.trim(),
-    author: document.getElementById('author').value.trim(),
-    price: Number(document.getElementById('price').value) || 0,
-    coverImageURL: document.getElementById('imageURL').value.trim()
-  };
-  try {
-    await addBook(book);
-    addForm.reset();
-  } catch (err) {
-    console.error('Add book failed', err);
-    alert('Add failed (check console)');
-  }
-});
-
-// Manual refresh (one-time)
-refreshBtn.addEventListener('click', () => { loadOnce(); });
-
-// One-time load
-async function loadOnce(){
-  try {
-    bookGrid.innerHTML = ''; emptyState.style.display = 'none';
-    const snapshot = await db.collection('books').orderBy('title').get();
-    if(snapshot.empty){ emptyState.style.display = 'block'; status.textContent = 'No books'; return; }
-    snapshot.forEach(doc => renderCard(doc));
-    status.textContent = 'Loaded';
-  } catch (err) {
-    console.error('Load once failed', err);
-    status.textContent = 'Error';
-  }
+// Add by default
+if (!localStorage.getItem("books")) {
+  localStorage.setItem("books", JSON.stringify(sampleBooks));
 }
 
-// Realtime listener (auto updates UI)
-let unsub = null;
-function startRealtime(){
-  status.textContent = 'Listening...';
-  if(unsub) unsub();
-  unsub = db.collection('books').orderBy('title').onSnapshot(snapshot => {
-    bookGrid.innerHTML = '';
-    if(snapshot.empty){ emptyState.style.display = 'block'; status.textContent = 'No books'; return; }
-    emptyState.style.display = 'none';
-    snapshot.forEach(doc => renderCard(doc));
-    status.textContent = 'Synced';
-  }, err => {
-    console.error('Snapshot error', err);
-    status.textContent = 'Snapshot error';
+const container = document.getElementById("book-container");
+
+function displayBooks() {
+  container.innerHTML = "";
+
+  let books = JSON.parse(localStorage.getItem("books"));
+
+  books.forEach(book => {
+    const card = document.createElement("div");
+    card.className = "book-card";
+
+    card.innerHTML = `
+      <img src="${book.coverImageURL}" />
+      <h3>${book.title}</h3>
+      <p>${book.author}</p>
+      <p>₹${book.price}</p>
+    `;
+
+    container.appendChild(card);
   });
 }
 
-// Start realtime on load
-startRealtime();
+displayBooks();
+
+if (!localStorage.getItem("books")) {
+  localStorage.setItem("books", JSON.stringify(sampleBooks))
+}
+
+// ================================
+// 4. Render Function
+// ================================
+function renderBooks(books) {
+    booksContainer.innerHTML = "";
+
+    if (books.length === 0) {
+        booksContainer.innerHTML = "<p>No books found.</p>";
+        return;
+    }
+
+    books.forEach((book) => {
+        const card = document.createElement("article");
+        card.className = "book-card";
+
+        // Card image
+        const img = document.createElement("img");
+        img.className = "book-cover";
+        img.src = book.coverImageURL || "https://via.placeholder.com/300x180?text=No+Image";
+        img.alt = book.title || "Book Cover";
+
+        // Card body
+        const body = document.createElement("div");
+        body.className = "book-body";
+
+        const title = document.createElement("h3");
+        title.className = "book-title";
+        title.textContent = book.title || "Untitled";
+
+        const author = document.createElement("p");
+        author.className = "book-author";
+        author.textContent = `by ${book.author || "Unknown"}`;
+
+        const price = document.createElement("p");
+        price.className = "book-price";
+        price.textContent = book.price ? `₹${book.price}` : "Price not set";
+
+        body.appendChild(title);
+        body.appendChild(author);
+        body.appendChild(price);
+
+        // Card actions
+        const actions = document.createElement("div");
+        actions.className = "book-actions";
+
+        const updateBtn = document.createElement("button");
+        updateBtn.className = "btn secondary";
+        updateBtn.textContent = "Update Author";
+        updateBtn.addEventListener("click", () => handleUpdateAuthor(book));
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn danger";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", () => handleDeleteBook(book.id));
+
+        const viewBtn = document.createElement("button");
+        viewBtn.className = "btn outline";
+        viewBtn.textContent = "View Details";
+        viewBtn.addEventListener("click", () => openDetailsModal(book));
+
+        actions.appendChild(updateBtn);
+        actions.appendChild(deleteBtn);
+        actions.appendChild(viewBtn);
+
+        card.appendChild(img);
+        card.appendChild(body);
+        card.appendChild(actions);
+
+        booksContainer.appendChild(card);
+    });
+}
+
+// ================================
+// 5. Add Book (CREATE)
+// ================================
+addBookForm.addEventListener("submit", async(e) => {
+    e.preventDefault();
+
+    const title = document.getElementById("title").value.trim();
+    const author = document.getElementById("author").value.trim();
+    const price = document.getElementById("price").value.trim();
+    const imageURL = document.getElementById("imageURL").value.trim();
+
+    if (!title || !author || !price || !imageURL) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    try {
+        await addDoc(booksColRef, {
+            title,
+            author,
+            price: Number(price),
+            coverImageURL: imageURL,
+            createdAt: serverTimestamp()
+        });
+
+        // Clear form
+        addBookForm.reset();
+    } catch (error) {
+        console.error("Error adding book:", error);
+        alert("Failed to add book. Check console for details.");
+    }
+});
+
+// ================================
+// 6. Update Author (UPDATE)
+// ================================
+async function handleUpdateAuthor(book) {
+    const newAuthor = prompt("Enter new author name:", book.author || "");
+
+    if (newAuthor === null) return; // user cancelled
+    const trimmed = newAuthor.trim();
+    if (!trimmed) {
+        alert("Author name cannot be empty.");
+        return;
+    }
+
+    try {
+        const docRef = doc(db, "books", book.id);
+        await updateDoc(docRef, { author: trimmed });
+    } catch (error) {
+        console.error("Error updating author:", error);
+        alert("Failed to update author.");
+    }
+}
+
+// ================================
+// 7. Delete Book (DELETE)
+// ================================
+async function handleDeleteBook(bookId) {
+    const confirmed = confirm("Are you sure you want to delete this book?");
+    if (!confirmed) return;
+
+    try {
+        const docRef = doc(db, "books", bookId);
+        await deleteDoc(docRef);
+    } catch (error) {
+        console.error("Error deleting book:", error);
+        alert("Failed to delete book.");
+    }
+}
+
+// ================================
+// 8. View Details Modal
+// ================================
+function openDetailsModal(book) {
+    modalContent.innerHTML = `
+    <h3>${book.title || "Untitled"}</h3>
+    <p><strong>Author:</strong> ${book.author || "Unknown"}</p>
+    <p><strong>Price:</strong> ${book.price ? `₹${book.price}` : "Not set"}</p>
+    <p><strong>Image URL:</strong> ${book.coverImageURL || "N/A"}</p>
+    <p><strong>Book ID:</strong> ${book.id}</p>
+  `;
+  modalOverlay.classList.remove("hidden");
+}
+
+function closeModal() {
+  modalOverlay.classList.add("hidden");
+}
+
+closeModalBtn.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) {
+    closeModal();
+  }
+});
