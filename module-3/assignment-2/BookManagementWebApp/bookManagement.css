@@ -1,0 +1,51 @@
+:root{
+  --accent:#ff8a00;
+  --card-bg:#fff;
+  --muted:#6b7280;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial;background:#f4f6f9;color:#111}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{
+  width:320px;background:#0f1724;color:#fff;padding:20px;flex-shrink:0;
+  display:flex;flex-direction:column;gap:12px;
+}
+.sidebar h2{margin:0}
+.muted{color:#cbd5e1}
+.form{display:flex;flex-direction:column;gap:8px}
+.input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#fff}
+.btn{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;background:transparent;color:#fff}
+.btn-primary{background:var(--accent);border:none;color:#111}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#cbd5e1}
+.controls{display:flex;gap:8px;flex-direction:column}
+.note{font-size:13px;color:#9ca3af;margin-top:auto}
+
+/* Main */
+.main{flex:1;padding:22px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.status{font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--card-bg);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(16,24,40,0.06);display:flex;flex-direction:column}
+.cover{height:160px;border-radius:8px;overflow:hidden;margin-bottom:10px;background:#eee;display:flex;align-items:center;justify-content:center}
+.cover img{width:100%;height:100%;object-fit:cover}
+.title{font-weight:700;margin:0 0 6px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:8px}
+.actions{margin-top:auto;display:flex;gap:8px}
+.actions button{flex:1;padding:8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
+.actions .update{background:#fef3c7}
+.actions .delete{background:#fee2e2}
+
+/* Empty */
+.empty{padding:30px;text-align:center;color:var(--muted)}
+
+/* Modal */
+.modal{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:40}
+.modal.open{display:flex}
+.modal-card{background:#fff;padding:18px;border-radius:8px;max-width:540px;width:95%}
+.modal-card img{width:100%;max-height:320px;object-fit:cover;border-radius:6px;margin-top:8px}
+
+/* Responsive */
+@media (max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}.sidebar{display:none}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}

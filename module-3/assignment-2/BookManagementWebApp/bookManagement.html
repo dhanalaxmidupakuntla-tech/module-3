@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book Management - Firestore</title>
+  <link rel="stylesheet" href="bookManagement.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Book Manager</h2>
+      <p class="muted">Add books to Firestore and manage them in realtime.</p>
+
+      <form id="addForm" class="form">
+        <input id="title" class="input" placeholder="Title" required />
+        <input id="author" class="input" placeholder="Author" required />
+        <input id="price" class="input" type="number" placeholder="Price (number)" required />
+        <input id="imageURL" class="input" placeholder="Cover Image URL" required />
+        <button id="addBtn" class="btn btn-primary" type="submit">Add Book</button>
+      </form>
+
+      <div class="controls">
+        <button id="seedBtn" class="btn btn-ghost">Seed Sample Books (if empty)</button>
+        <button id="refreshBtn" class="btn btn-ghost">Refresh</button>
+      </div>
+
+      <p class="note">Replace firebaseConfig in <code>index.js</code> with your project's config and enable Firestore.</p>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <h1>📚 Books</h1>
+        <div id="status" class="status muted">Connecting...</div>
+      </header>
+
+      <section id="bookGrid" class="grid"></section>
+      <div id="emptyState" class="empty" style="display:none">No Books Available</div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3 id="mdTitle"></h3>
+      <p id="mdAuthor"></p>
+      <p id="mdPrice"></p>
+      <img id="mdImg" alt="cover" />
+      <div style="text-align:right;margin-top:12px">
+        <button id="closeModal" class="btn btn-ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="bookManagement.js"></script>
+</body>
+</html>

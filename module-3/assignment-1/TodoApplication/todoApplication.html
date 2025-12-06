@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f9;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        }
+
+        .container {
+        width: 400px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        }
+
+        ul {
+        list-style: none;
+        padding: 0;
+        }
+
+        li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        background-color: #f2f2f2;
+        }
+
+        li.completed span {
+        text-decoration: line-through;
+        color: gray;
+        }
+
+        button {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        }
+
+        .delete {
+        background: crimson;
+        color: white;
+        }
+
+        .toggle-btn {
+        background: green;
+        color: white;
+        margin-right: 5px;
+        }
+
+        .empty {
+        text-align: center;
+        color: gray;
+        margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List</h1>
+        <ul id="todoList"></ul>
+        <p id="emptyMessage" class="empty"></p>
+    </div>
+</body>
+<script>
+    const API_URL = "https://jsonplaceholder.typicode.com/todos";
+    const STORAGE_KEY = "todoItems";
+    const todoListElement = document.getElementById("todoList");
+    const emptyMessageElement = document.getElementById("emptyMessage");
+
+    async function fetchAndStoreTodos() {
+        const res = await fetch(API_URL);
+        const todos = await res.json();
+
+        const first20Todos = todos.slice(0, 20);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(first20Todos));
+
+        renderTodos();
+    }
+
+    function getTodos(){
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }
+
+    function saveTodos(todos){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    function renderTodos(){
+        const todos = getTodos();
+        todoListElement.innerHTML = "";
+
+        if (todos.length === 0) {
+            emptyMessageElement.textContent = "No todo items available.";
+            return;
+        } else {
+            emptyMessageElement.textContent = "";
+        }
+
+        emptyMessageElement.textContent = "";
+
+        todos.forEach(todo => {
+            const li = document.createElement("li");
+            
+            if (todo.completed){
+                li.classList.add("completed");
+            }
+            
+            const span = document.createElement("span");
+            span.textContent = todo.title + " - " + (todo.completed ? "Completed" : "Pending");
+
+            const togglebtn = document.createElement("button");
+            togglebtn.textContent = "Toggle Status";
+            togglebtn.className = "toggle-btn";
+            togglebtn.onclick = () => toggleStatus(todo.id)
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Delete";
+            deleteBtn.className = "delete";
+            deleteBtn.onclick = () => deleteTodo(todo.id);
+
+            li.append(span, togglebtn, deleteBtn);
+            todoList.appendChild(li);
+        });
+    }
+
+    function deleteTodo(id){
+        let todos = getTodos();
+        todos = todos.filter(todo => todo.id !== id);
+
+        saveTodos(todos);
+        renderTodos();
+    }
+
+    function toggleStatus(id) {
+        let todos = getTodos();
+
+        todos = todos.map(todo => {
+            if (todo.id === id){
+                todo.completed = !todo.completed
+            }
+            return todo;
+        })
+
+        saveTodos(todos)
+        renderTodos()
+    }
+
+    if(!localStorage.getItem(STORAGE_KEY)){
+        fetchAndStoreTodos();
+    }
+    else{
+        renderTodos();
+    }
+</script>
+</html>
