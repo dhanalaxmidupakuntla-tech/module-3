@@ -1,67 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>Book Management App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="bookManagement.css" />
-    <!-- Firebase SDKs -->
-    <script type="module" src="bookManagement.js" defer></script>
+  <meta charset="utf-8" />
+  <title>Book Manager (RTDB)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="bookManagement.css" />
 </head>
-
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <h1>Book Manager</h1>
-            <h2>Add New Book</h2>
-            <form id="addBookForm">
-                <label>
-          Title
-          <input type="text" id="title" required />
+  <div class="app-container">
+    <aside class="sidebar">
+      <h1>Book Manager</h1>
+      <h2>Add New Book</h2>
+
+      <form id="addBookForm" class="form">
+        <label>Title
+          <input id="title" type="text" placeholder="Book title" required />
+        </label>
+        <label>Author
+          <input id="author" type="text" placeholder="Author name" required />
+        </label>
+        <label>Price
+          <input id="price" type="number" min="0" step="1" placeholder="Price" required />
+        </label>
+        <label>Image URL
+          <input id="imageURL" type="url" placeholder="https://..." required />
         </label>
 
-                <label>
-          Author
-          <input type="text" id="author" required />
-        </label>
+        <button class="btn primary" type="submit">Add Book</button>
+      </form>
+    </aside>
 
-                <label>
-          Price
-          <input type="number" id="price" min="0" step="0.01" required />
-        </label>
+    <main class="main-content">
+      <header class="main-header">
+        <h2>All Books</h2>
+        <p class="muted">Realtime synced with Firebase Realtime Database</p>
+      </header>
 
-                <label>
-          Image URL
-          <input type="url" id="imageURL" required />
-        </label>
+      <div id="book-container" class="book-grid"></div>
+    </main>
+  </div>
 
-                <button type="submit" class="btn primary">Add Book</button>
-            </form>
-        </aside>
-
-        <!-- Main content -->
-        <main class="main-content">
-            <header class="main-header">
-                <h2>All Books</h2>
-                <p>Realtime synced with Firebase Firestore</p>
-            </header>
-
-            <section id="booksContainer" class="books-grid">
-              <div id="book-container"></div>
-            </section>
-        </main>
+  <!-- Modal -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <button id="closeModalBtn" class="modal-close">&times;</button>
+      <div id="modalContent"></div>
     </div>
+  </div>
 
-    <!-- View Details Modal -->
-    <div id="modalOverlay" class="modal-overlay hidden">
-        <div class="modal">
-            <button id="closeModalBtn" class="modal-close">&times;</button>
-            <div id="modalContent"></div>
-        </div>
-    </div>
+  <!-- main JS (module) -->
+  <script type="module" src="bookManagement.js"></script>
 </body>
-
 </html>
-
