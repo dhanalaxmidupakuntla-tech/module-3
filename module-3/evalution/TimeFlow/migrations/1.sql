@@ -1,0 +1,15 @@
+
+CREATE TABLE activities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  activity_date DATE NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  minutes INTEGER NOT NULL,
+  start_minute INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_activities_user_date ON activities(user_id, activity_date);
+CREATE INDEX idx_activities_user_id ON activities(user_id);
