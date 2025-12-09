@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Time Tracker — Daily Analytics</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase compat SDKs (CDN for simple setups) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- AUTH / LANDING -->
+  <main id="authScreen" class="screen center">
+    <div class="card auth-card" role="region" aria-label="Authentication">
+      <h1 class="logo">⏱ AI Time Tracker</h1>
+      <p class="muted">Log daily activities (minutes) and analyze how your 24 hours are spent.</p>
+
+      <label class="sr-only" for="authEmail">Email</label>
+      <input id="authEmail" type="email" placeholder="Email" autocomplete="email" />
+
+      <label class="sr-only" for="authPassword">Password</label>
+      <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
+
+      <div class="row">
+        <button id="signinBtn" class="btn primary">Sign in</button>
+        <button id="signupBtn" class="btn outline">Sign up</button>
+      </div>
+
+      <div class="row small-gap">
+        <button id="googleBtn" class="btn google">Continue with Google</button>
+      </div>
+
+      <p class="note">Demo: You can use the app without Firebase by not supplying config. For production, add Firebase config in the top of script.js.</p>
+      <div><a id="openTests" href="tests.html" target="_blank" class="link muted">Open tests (if provided)</a></div>
+    </div>
+  </main>
+
+  <!-- APP -->
+  <main id="appScreen" class="screen hidden" aria-live="polite">
+    <header class="topbar">
+      <div class="brand">
+        <h2>AI Time Tracker</h2>
+        <div class="sub">Daily Logging + Analytics</div>
+      </div>
+
+      <div class="header-actions">
+        <label for="datePicker" class="sr-only">Choose date</label>
+        <input id="datePicker" type="date" />
+        <button id="signOutBtn" class="btn small">Logout</button>
+      </div>
+    </header>
+
+    <section class="container">
+      <!-- Left: Add / List -->
+      <aside class="panel left" aria-label="Add and list activities">
+        <div class="panel-card">
+          <h3>Add activity</h3>
+
+          <label for="titleInput">Activity title</label>
+          <input id="titleInput" type="text" placeholder="e.g., Project work" />
+
+          <label for="categoryInput">Category</label>
+          <select id="categoryInput" aria-label="Category">
+            <option>Work</option>
+            <option>Study</option>
+            <option>Sleep</option>
+            <option>Exercise</option>
+            <option>Entertainment</option>
+            <option>Other</option>
+          </select>
+
+          <label for="minutesInput">Minutes</label>
+          <input id="minutesInput" type="number" min="1" placeholder="Duration in minutes" />
+
+          <div class="row small-gap">
+            <button id="addBtn" class="btn primary">Add</button>
+            <button id="resetBtn" class="btn outline">Clear</button>
+          </div>
+
+          <div class="meta">
+            <div id="progressText">Remaining: 1440 mins</div>
+            <div class="progress-track" aria-hidden="true">
+              <div id="progressBar" class="progress-fill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card list-card">
+          <h3>Activities</h3>
+          <div id="activitiesList" class="list" role="list" aria-label="Activities list"></div>
+        </div>
+
+        <div class="panel-card">
+          <button id="analyseBtn" class="btn primary full" disabled>Analyse (enable at 1440)</button>
+        </div>
+      </aside>
+
+      <!-- Right: Analytics -->
+      <main class="panel right" aria-live="polite">
+        <div id="noData" class="no-data">
+          <div class="emoji">📭</div>
+          <h3>No data available</h3>
+          <p>Select a date and start logging. When total minutes reach 1440, click Analyse to view your dashboard.</p>
+          <button id="ctaAdd" class="btn primary">Start logging now</button>
+        </div>
+
+        <div id="analysis" class="analysis hidden">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-title">Total hours</div>
+              <div id="statHours" class="stat-value">0 hrs</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Activities</div>
+              <div id="statCount" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Top category</div>
+              <div id="statTop" class="stat-value">—</div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h4>Time by category</h4>
+              <canvas id="pieChart" height="260"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Activity durations</h4>
+              <canvas id="barChart" height="260"></canvas>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+  </main>
+
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editHeading">
+    <div class="modal-card">
+      <h3 id="editHeading">Edit activity</h3>
+      <label for="editTitle">Title</label>
+      <input id="editTitle" type="text" />
+      <label for="editCategory">Category</label>
+      <select id="editCategory"></select>
+      <label for="editMinutes">Minutes</label>
+      <input id="editMinutes" type="number" min="1" />
+      <div class="row small-gap">
+        <button id="saveEdit" class="btn primary">Save</button>
+        <button id="cancelEdit" class="btn outline">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App logic -->
+  <script src="index.js"></script>
+</body>
+</html>
