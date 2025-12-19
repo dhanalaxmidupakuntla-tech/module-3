@@ -1,0 +1,17 @@
+nav {
+  background-color: black;
+  justify-content: center;
+  align-items: center;
+}
+
+ul{
+  display: flex;
+  justify-content: space-between;
+}
+
+ul li a{
+  color: white;
+  font-size: 28px;
+  text-decoration: none;
+  margin-inline: 25px;
+}

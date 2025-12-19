@@ -1,0 +1,108 @@
+/* Global */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #1e293b;
+  padding: 12px;
+  display: flex;
+  gap: 20px;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+/* Centered container */
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+/* Login Card */
+.login-card {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.login-card button {
+  width: 100%;
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.login-card button:hover {
+  background-color: #1d4ed8;
+}
+
+/* Todo Grid */
+.todo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+/* Todo Card */
+.todo-card {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.todo-card h4 {
+  margin: 0 0 10px;
+}
+
+.todo-card p {
+  font-size: 14px;
+}
+
+/* Logout Button */
+.logout-btn {
+  background-color: #dc2626;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.logout-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* Error */
+.error {
+  color: red;
+  text-align: center;
+}
